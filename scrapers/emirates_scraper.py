@@ -27,16 +27,16 @@ class EmiratesScraper(AirlineScraper):
         """
         results = []
         
-        with SB(uc=True, test=True, locale="en", ad_block=True) as sb:
+        with SB(uc=True, test=False, locale="en", ad_block=True) as sb:
             # Navigate and fill form
             url = "https://www.emirates.com/ng/english/book/"
-            sb.activate_cdp_mode(url)
+            sb.open(url)
             sb.sleep(10)  # Increased from 6s
             
             # Handle cookies
-            sb.cdp.click_if_visible("button#onetrust-accept-btn-handler")
-            sb.cdp.click_if_visible('button:contains("Accept")')
-            sb.cdp.click_if_visible('button[aria-label*="Accept"]')
+            sb.click_if_visible("button#onetrust-accept-btn-handler")
+            sb.click_if_visible('button:contains("Accept")')
+            sb.click_if_visible('button[aria-label*="Accept"]')
             sb.sleep(3)
             
             # Set origin

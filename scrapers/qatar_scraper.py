@@ -26,7 +26,7 @@ class QatarScraper(AirlineScraper):
         """
         results = []
         
-        with SB(uc=True, test=True, locale="en", ad_block=True) as sb:
+        with SB(uc=True, test=False, locale="en", ad_block=True) as sb:
             # Build deep link URL
             url = (
                 f"https://www.qatarairways.com/app/booking/flight-selection"
@@ -50,14 +50,15 @@ class QatarScraper(AirlineScraper):
                 f"&allowRedemption=N"
             )
             
-            sb.activate_cdp_mode(url)
+            sb.open(url)
             sb.sleep(10)
             
             # Handle cookies
-            sb.cdp.click_if_visible("button#onetrust-accept-btn-handler")
-            sb.cdp.click_if_visible('button:contains("Accept")')
-            sb.cdp.click_if_visible('button[aria-label*="Accept"]')
-            sb.cdp.click_if_visible('button:contains("Accept all cookies")')
+            sb.click_if_visible("button#onetrust-accept-btn-handler")
+            sb.sleep(3)
+            sb.click_if_visible('button:contains("Accept")')
+            sb.click_if_visible('button[aria-label*="Accept"]')
+            sb.click_if_visible('button:contains("Accept all cookies")')
             sb.sleep(3)
             
             # Wait for calendar

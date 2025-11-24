@@ -1,0 +1,85 @@
+connection.py:1:SB
+--------------------------------------------------------------------
+Last Page: [WARNING! Browser Not Open!]
+ Duration: 91.79s
+  Browser: Chrome 142.0.7444.176
+   Driver: chromedriver 142.0.7444.175
+Timestamp: 1764015231  (Unix Timestamp)
+     Date: Monday, 24 November 2025
+     Time: 9:13:51 PM  (WAT, UTC+01:00)
+--------------------------------------------------------------------
+Traceback:
+  Traceback (most recent call last):
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/urllib3/connection.py", line 198, in _new_conn
+    sock = connection.create_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/urllib3/util/connection.py", line 85, in create_connection
+    raise err
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/urllib3/util/connection.py", line 73, in create_connection
+    sock.connect(sa)
+ConnectionRefusedError: [Errno 61] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+               ^^^^^^^^^^^^^^^^^^^
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/urllib3/connectionpool.py", line 493, in _make_request
+    conn.request(
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/urllib3/connection.py", line 494, in request
+    self.endheaders()
+  File "/opt/anaconda3/lib/python3.12/http/client.py", line 1326, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "/opt/anaconda3/lib/python3.12/http/client.py", line 1085, in _send_output
+    self.send(msg)
+  File "/opt/anaconda3/lib/python3.12/http/client.py", line 1029, in send
+    self.connect()
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/urllib3/connection.py", line 325, in connect
+    self.sock = self._new_conn()
+                ^^^^^^^^^^^^^^^^
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/urllib3/connection.py", line 213, in _new_conn
+    raise NewConnectionError(
+urllib3.exceptions.NewConnectionError: <urllib3.connection.HTTPConnection object at 0x103adaab0>: Failed to establish a new connection: [Errno 61] Connection refused
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/scrapers/qatar_scraper.py", line 53, in scrape
+    sb.activate_cdp_mode(url)
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/seleniumbase/fixtures/base_case.py", line 5048, in activate_cdp_mode
+    self.driver.uc_open_with_cdp_mode(url, **kwargs)
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/seleniumbase/core/browser_launcher.py", line 5842, in <lambda>
+    lambda *args, **kwargs: uc_open_with_cdp_mode(
+                            ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/seleniumbase/core/browser_launcher.py", line 648, in uc_open_with_cdp_mode
+    cdp_details = driver._get_cdp_details()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/selenium/webdriver/remote/webdriver.py", line 1470, in _get_cdp_details
+    res = http.request("GET", f"http://{debugger_address}/json/version")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/urllib3/_request_methods.py", line 135, in request
+    return self.request_encode_url(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/urllib3/_request_methods.py", line 182, in request_encode_url
+    return self.urlopen(method, url, **extra_kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/urllib3/poolmanager.py", line 459, in urlopen
+    response = conn.urlopen(method, u.request_uri, **kw)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/urllib3/connectionpool.py", line 871, in urlopen
+    return self.urlopen(
+           ^^^^^^^^^^^^^
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/urllib3/connectionpool.py", line 871, in urlopen
+    return self.urlopen(
+           ^^^^^^^^^^^^^
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/urllib3/connectionpool.py", line 871, in urlopen
+    return self.urlopen(
+           ^^^^^^^^^^^^^
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+              ^^^^^^^^^^^^^^^^^^
+  File "/Users/chibi/Desktop/Desktop/Airline scraper/venv/lib/python3.12/site-packages/urllib3/util/retry.py", line 519, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPConnectionPool(host='127.0.0.1', port=9222): Max retries exceeded with url: /json/version (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x103adaab0>: Failed to establish a new connection: [Errno 61] Connection refused'))

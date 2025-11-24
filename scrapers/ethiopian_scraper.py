@@ -26,7 +26,7 @@ class EthiopianScraper(AirlineScraper):
         """
         results = []
         
-        with SB(uc=True, test=True, locale="en", ad_block=True) as sb:
+        with SB(uc=True, test=False, locale="en", ad_block=True) as sb:
             # Build deep link URL
             url = (
                 f"https://dxbooking.ethiopianairlines.com/dx/ETDX/#/matrix"
@@ -49,17 +49,17 @@ class EthiopianScraper(AirlineScraper):
                 f"&direction=0"
             )
             
-            sb.activate_cdp_mode(url)
-            sb.sleep(5)
+            sb.open(url)
+            sb.sleep(10)
             
             # Handle cookies
-            sb.cdp.click_if_visible("button#onetrust-accept-btn-handler")
-            sb.cdp.click_if_visible('button:contains("Accept")')
-            sb.cdp.click_if_visible('button[aria-label*="Accept"]')
+            sb.click_if_visible("button#onetrust-accept-btn-handler")
+            sb.click_if_visible('button:contains("Accept")')
+            sb.click_if_visible('button[aria-label*="Accept"]')
             sb.sleep(3)
             
             # Wait for results
-            sb.wait_for_element('.dxp-matrix-grid-layout', timeout=20)
+            sb.wait_for_element('.dxp-matrix-grid-layout', timeout=60)
             sb.sleep(15)  # Wait for full page load
             
             # Parse results
