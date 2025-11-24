@@ -31,35 +31,35 @@ class EmiratesScraper(AirlineScraper):
             # Navigate and fill form
             url = "https://www.emirates.com/ng/english/book/"
             sb.activate_cdp_mode(url)
-            sb.sleep(6)
+            sb.sleep(10)  # Increased from 6s
             
             # Handle cookies
             sb.cdp.click_if_visible("button#onetrust-accept-btn-handler")
             sb.cdp.click_if_visible('button:contains("Accept")')
             sb.cdp.click_if_visible('button[aria-label*="Accept"]')
-            sb.sleep(2)
+            sb.sleep(3)
             
             # Set origin
             sb.click('input[id^="auto-suggest_"]:first-of-type')
-            sb.sleep(1)
-            sb.type('input[id^="auto-suggest_"]:first-of-type', request.origin)
             sb.sleep(2)
+            sb.type('input[id^="auto-suggest_"]:first-of-type', request.origin)
+            sb.sleep(3)
             sb.click('li[role="option"]:first-child')
-            sb.sleep(1)
+            sb.sleep(2)
             
             # Set destination
             arrival_id = sb.execute_script(
                 "return document.querySelectorAll(\"input[id^='auto-suggest_']\")[1].id"
             )
-            sb.sleep(1)
-            sb.click(f"#{arrival_id}")
-            sb.sleep(1)
-            sb.type(f"#{arrival_id}", request.destination + "\n")
             sb.sleep(2)
+            sb.click(f"#{arrival_id}")
+            sb.sleep(2)
+            sb.type(f"#{arrival_id}", request.destination + "\n")
+            sb.sleep(3)
             
             # Enable flexible dates
             sb.click('button.custom-switch__toggle')
-            sb.sleep(1)
+            sb.sleep(2)
             
             # Set dates (using React value setter hack)
             dep_date_str = request.departure_date.strftime("%d %b %y")
@@ -67,7 +67,7 @@ class EmiratesScraper(AirlineScraper):
             
             # Set departure date
             sb.click('#startDate')
-            sb.sleep(2)
+            sb.sleep(3)
             sb.execute_script(f"""
                 var input = document.querySelector('#startDate');
                 var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
@@ -76,11 +76,11 @@ class EmiratesScraper(AirlineScraper):
                 input.dispatchEvent(new Event('change', {{ bubbles: true }}));
                 input.dispatchEvent(new Event('blur', {{ bubbles: true }}));
             """)
-            sb.sleep(1)
+            sb.sleep(2)
             
             # Set return date
             sb.click('#endDate')
-            sb.sleep(2)
+            sb.sleep(3)
             sb.execute_script(f"""
                 var input = document.querySelector('#endDate');
                 var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
@@ -89,14 +89,14 @@ class EmiratesScraper(AirlineScraper):
                 input.dispatchEvent(new Event('change', {{ bubbles: true }}));
                 input.dispatchEvent(new Event('blur', {{ bubbles: true }}));
             """)
-            sb.sleep(2)
+            sb.sleep(3)
             
             # Search
             sb.click('button.rsw-submit-button')
-            sb.sleep(10)
+            sb.sleep(20)  # Increased from 10s
             
             # Extract results
-            sb.wait_for_element('.calendar-grid', timeout=20)
+            sb.wait_for_element('.calendar-grid', timeout=30)
             soup = BeautifulSoup(sb.get_page_source(), 'html.parser')
             
             # Extract origin and destination
