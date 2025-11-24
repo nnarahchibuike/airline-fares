@@ -26,9 +26,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         f"Hi {user.mention_html()}! 👋\n\n"
         "I can help you find the best flight prices.\n\n"
         "<b>Usage:</b>\n"
-        "/search [ORIGIN] [DEST] [DEPART_DATE] [RETURN_DATE]\n\n"
-        "<b>Example:</b>\n"
-        "/search LOS CAN 2025-12-03 2025-12-23\n\n"
+        "/search [ORIGIN] [DEST] [DEPART] [RETURN] [AIRLINE]\n\n"
+        "<b>Examples:</b>\n"
+        "1. Search all: /search LOS CAN 2025-12-03 2025-12-23\n"
+        "2. Search specific: /search LOS CAN 2025-12-03 2025-12-23 emirates\n\n"
         "<i>Dates must be in YYYY-MM-DD format.</i>"
     )
 
@@ -36,25 +37,27 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     """Send a help message when the command /help is issued."""
     await update.message.reply_text(
         "To search for flights, use the /search command:\n"
-        "/search ORIGIN DESTINATION DEPART_DATE RETURN_DATE\n\n"
+        "/search ORIGIN DESTINATION DEPART_DATE RETURN_DATE [AIRLINE]\n\n"
+        "Optional [AIRLINE]: emirates, ethiopian, qatar\n\n"
         "Example:\n"
-        "/search LOS CAN 2025-12-03 2025-12-23"
+        "/search LOS CAN 2025-12-03 2025-12-23 qatar"
     )
 
 async def search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle the /search command."""
     args = context.args
-    if len(args) != 4:
+    if len(args) < 4 or len(args) > 5:
         await update.message.reply_text(
             "⚠️ Invalid format.\n\n"
             "Please use:\n"
-            "/search ORIGIN DESTINATION DEPART_DATE RETURN_DATE\n\n"
+            "/search ORIGIN DESTINATION DEPART_DATE RETURN_DATE [AIRLINE]\n\n"
             "Example:\n"
             "/search LOS CAN 2025-12-03 2025-12-23"
         )
         return
 
-    origin, dest, dep_str, ret_str = args
+    origin, dest, dep_str, ret_str = args[:4]
+    airline_filter = args[4].lower() if len(args) == 5 else None
 
     try:
         dep_date = datetime.strptime(dep_str, "%Y-%m-%d").date()
@@ -67,8 +70,9 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
 
     # Notify user that search is starting
+    filter_msg = f" ({airline_filter.capitalize()})" if airline_filter else " (All Airlines)"
     status_msg = await update.message.reply_text(
-        f"🔎 <b>Searching flights...</b>\n"
+        f"🔎 <b>Searching flights...</b>{filter_msg}\n"
         f"🛫 {origin} → {dest}\n"
         f"📅 {dep_str} to {ret_str}\n\n"
         "<i>This may take 2-3 minutes. Please wait...</i>",
@@ -86,9 +90,31 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
         # Setup orchestrator
         orchestrator = FlightOrchestrator()
-        orchestrator.register_scraper(EmiratesScraper())
-        orchestrator.register_scraper(EthiopianScraper())
-        orchestrator.register_scraper(QatarScraper())
+        
+        # Scraper mapping
+        scraper_map = {
+            "emirates": EmiratesScraper,
+            "ek": EmiratesScraper,
+            "ethiopian": EthiopianScraper,
+            "et": EthiopianScraper,
+            "qatar": QatarScraper,
+            "qr": QatarScraper
+        }
+
+        if airline_filter:
+            if airline_filter in scraper_map:
+                orchestrator.register_scraper(scraper_map[airline_filter]())
+            else:
+                await status_msg.edit_text(
+                    f"⚠️ Unknown airline: {airline_filter}\n"
+                    "Supported: emirates, ethiopian, qatar"
+                )
+                return
+        else:
+            # Register all
+            orchestrator.register_scraper(EmiratesScraper())
+            orchestrator.register_scraper(EthiopianScraper())
+            orchestrator.register_scraper(QatarScraper())
 
         # Run search
         import asyncio
