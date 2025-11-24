@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.env
+
+# Mac
+.DS_Store
+
+# SeleniumBase
+downloaded_files/
+*.log
+
+# Output files
+*_fares.md
+qatar_debug.html
+
+# Legacy scripts
+raw_emirates.py
+raw_ethiopian.py
+raw_qatar.py

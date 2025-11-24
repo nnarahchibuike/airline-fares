@@ -1,0 +1,4 @@
+seleniumbase
+beautifulsoup4
+python-telegram-bot
+python-dotenv

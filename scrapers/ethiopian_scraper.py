@@ -1,0 +1,121 @@
+"""Ethiopian Airlines scraper."""
+from typing import List
+from seleniumbase import SB
+from bs4 import BeautifulSoup
+
+from scrapers.base_scraper import AirlineScraper
+from core.models import FlightRequest, FlightResult
+
+
+class EthiopianScraper(AirlineScraper):
+    """Scraper for Ethiopian Airlines."""
+    
+    def __init__(self):
+        """Initialize Ethiopian scraper."""
+        super().__init__("Ethiopian")
+    
+    def scrape(self, request: FlightRequest) -> List[FlightResult]:
+        """
+        Scrape Ethiopian Airlines flights.
+        
+        Args:
+            request: FlightRequest with search parameters
+            
+        Returns:
+            List of FlightResult objects
+        """
+        results = []
+        
+        with SB(uc=True, test=True, locale="en", ad_block=True) as sb:
+            # Build deep link URL
+            url = (
+                f"https://dxbooking.ethiopianairlines.com/dx/ETDX/#/matrix"
+                f"?journeyType=round-trip"
+                f"&activeMonth={request.departure_date.strftime('%m-%d-%Y')}"
+                f"&locale=en-GB"
+                f"&awardBooking=false"
+                f"&searchType=BRANDED"
+                f"&class=Economy"
+                f"&ADT={request.adults}"
+                f"&C13=0"
+                f"&CHD=0"
+                f"&INF=0"
+                f"&origin={request.origin}"
+                f"&destination={request.destination}"
+                f"&date={request.departure_date.strftime('%m-%d-%Y')}"
+                f"&origin1={request.destination}"
+                f"&destination1={request.origin}"
+                f"&date1={request.return_date.strftime('%m-%d-%Y')}"
+                f"&direction=0"
+            )
+            
+            sb.activate_cdp_mode(url)
+            sb.sleep(5)
+            
+            # Handle cookies
+            sb.cdp.click_if_visible("button#onetrust-accept-btn-handler")
+            sb.cdp.click_if_visible('button:contains("Accept")')
+            sb.cdp.click_if_visible('button[aria-label*="Accept"]')
+            sb.sleep(3)
+            
+            # Wait for results
+            sb.wait_for_element('.dxp-matrix-grid-layout', timeout=20)
+            sb.sleep(15)  # Wait for full page load
+            
+            # Parse results
+            soup = BeautifulSoup(sb.get_page_source(), 'html.parser')
+            
+            # Extract outbound dates (column headers)
+            outbound_dates = []
+            headers = soup.select('thead th.date-header .date .number')
+            for header in headers:
+                date_text = header.text.strip()
+                if date_text:
+                    outbound_dates.append(date_text)
+            
+            # Extract rows
+            rows = soup.select('tbody tr')
+            for row_idx, row in enumerate(rows):
+                row_header = row.select_one('th .date .number')
+                if not row_header:
+                    continue
+                return_date = row_header.text.strip()
+                
+                cells = row.select('td')
+                for col_idx, cell in enumerate(cells):
+                    if col_idx >= len(outbound_dates):
+                        break
+                    
+                    depart_date = outbound_dates[col_idx]
+                    
+                    # Check if sold out
+                    button = cell.select_one('button')
+                    if button and 'no-flights' in button.get('class', []):
+                        continue
+                    
+                    # Extract price
+                    amount_el = cell.select_one('.amount .number')
+                    currency_el = cell.select_one('.currency.symbol')
+                    
+                    if amount_el and currency_el:
+                        currency = currency_el.text.strip()
+                        amount_text = amount_el.text.strip()
+                        price_numeric = float(amount_text.replace(',', ''))
+                        
+                        # Check for lowest fare
+                        is_lowest = button and 'lowest-fare' in button.get('class', [])
+                        
+                        result = FlightResult(
+                            airline=self.name,
+                            origin=f"{request.origin}",
+                            destination=f"{request.destination}",
+                            departure_date=depart_date,
+                            return_date=return_date,
+                            price=price_numeric,
+                            currency=currency,
+                            price_display=f"{currency} {amount_text}",
+                            is_lowest=is_lowest
+                        )
+                        results.append(result)
+        
+        return results
