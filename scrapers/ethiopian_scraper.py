@@ -66,12 +66,17 @@ class EthiopianScraper(AirlineScraper):
             soup = BeautifulSoup(sb.get_page_source(), 'html.parser')
             
             # Extract outbound dates (column headers)
+            # Extract outbound dates (column headers)
             outbound_dates = []
             headers = soup.select('thead th.date-header .date .number')
             for header in headers:
                 date_text = header.text.strip()
-                if date_text:
+                if date_text and "Invalid" not in date_text:
                     outbound_dates.append(date_text)
+                else:
+                    # Keep a placeholder to maintain index alignment, or skip?
+                    # If we skip, indices shift. Better to append None and check later.
+                    outbound_dates.append(None)
             
             # Extract rows
             rows = soup.select('tbody tr')
@@ -81,12 +86,17 @@ class EthiopianScraper(AirlineScraper):
                     continue
                 return_date = row_header.text.strip()
                 
+                if "Invalid" in return_date:
+                    continue
+                
                 cells = row.select('td')
                 for col_idx, cell in enumerate(cells):
                     if col_idx >= len(outbound_dates):
                         break
                     
                     depart_date = outbound_dates[col_idx]
+                    if not depart_date:  # Skip invalid columns
+                        continue
                     
                     # Check if sold out
                     button = cell.select_one('button')
