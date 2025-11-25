@@ -69,6 +69,9 @@ Run the container in the background (detached mode):
 sudo docker run -d --name flight-bot --env-file .env flight-bot
 ```
 
+> **Note:** The Dockerfile now uses `start.sh` to configure the Timezone (default: Africa/Lagos) and Xvfb. This ensures correct currency detection (NGN) and browser stability.
+
+
 ## 5. Manage the Bot
 
 **Check logs:**

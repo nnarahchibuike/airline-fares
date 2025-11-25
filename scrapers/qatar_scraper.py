@@ -26,7 +26,7 @@ class QatarScraper(AirlineScraper):
         """
         results = []
         
-        with SB(uc=True, test=False, locale="en", ad_block=True) as sb:
+        with SB(uc=True, test=False, locale="en", ad_block=True, args=["--disable-dev-shm-usage"]) as sb:
             # Build deep link URL
             url = (
                 f"https://www.qatarairways.com/app/booking/flight-selection"

@@ -15,7 +15,18 @@ RUN apt-get update && apt-get install -y \
     default-jdk \
     python3-tk \
     python3-dev \
+    locales \
+    tzdata \
     && rm -rf /var/lib/apt/lists/*
+
+# Configure Locale and Timezone
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    update-locale LANG=en_US.UTF-8
+
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+ENV TZ=Africa/Lagos
 
 # Install Google Chrome
 RUN install -m 0755 -d /etc/apt/keyrings \
@@ -45,5 +56,6 @@ COPY . .
 ENV PYTHONUNBUFFERED=1
 ENV DISPLAY=:99
 
-# Start command
-CMD ["python", "main.py"]
+# Make start script executable and run it
+RUN chmod +x start.sh
+CMD ["./start.sh"]
