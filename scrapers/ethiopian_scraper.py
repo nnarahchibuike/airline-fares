@@ -35,7 +35,6 @@ class EthiopianScraper(AirlineScraper):
                     f"https://dxbooking.ethiopianairlines.com/dx/ETDX/#/matrix"
                     f"?journeyType=round-trip"
                     f"&activeMonth={request.departure_date.strftime('%m-%d-%Y')}"
-                    f"&locale=en-GB"
                     f"&awardBooking=false"
                     f"&searchType=BRANDED"
                     f"&class=Economy"
