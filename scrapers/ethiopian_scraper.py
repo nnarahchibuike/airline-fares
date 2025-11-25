@@ -28,7 +28,7 @@ class EthiopianScraper(AirlineScraper):
         """
         results = []
         
-        with SB(uc=True, test=False, locale="en", ad_block=False, args=["--disable-dev-shm-usage"]) as sb:
+        with SB(uc=True, test=False, locale="en", ad_block=False, chromium_arg="--disable-dev-shm-usage") as sb:
             try:
                 # Build deep link URL
                 url = (

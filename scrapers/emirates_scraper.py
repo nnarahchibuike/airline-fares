@@ -27,7 +27,7 @@ class EmiratesScraper(AirlineScraper):
         """
         results = []
         
-        with SB(uc=True, test=False, locale="en", ad_block=True, args=["--disable-dev-shm-usage"]) as sb:
+        with SB(uc=True, test=False, locale="en", ad_block=True, chromium_arg="--disable-dev-shm-usage") as sb:
             # Navigate and fill form
             url = "https://www.emirates.com/ng/english/book/"
             sb.open(url)
