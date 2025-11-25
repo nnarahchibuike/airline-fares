@@ -10,6 +10,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandl
 from core.models import FlightRequest, FlightResult
 from core.orchestrator import FlightOrchestrator
 from scrapers.emirates_scraper import EmiratesScraper
+from scrapers.emiratesv2_scraper import EmiratesV2Scraper
 from scrapers.ethiopian_scraper import EthiopianScraper
 from scrapers.qatar_scraper import QatarScraper
 
@@ -38,7 +39,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     await update.message.reply_text(
         "To search for flights, use the /search command:\n"
         "/search ORIGIN DESTINATION DEPART_DATE RETURN_DATE [AIRLINE]\n\n"
-        "Optional [AIRLINE]: emirates, ethiopian, qatar\n\n"
+        "Optional [AIRLINE]: emirates, emiratesv2, ethiopian, qatar\n\n"
         "Example:\n"
         "/search LOS CAN 2025-12-03 2025-12-23 qatar"
     )
@@ -95,6 +96,7 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         scraper_map = {
             "emirates": EmiratesScraper,
             "ek": EmiratesScraper,
+            "emiratesv2": EmiratesV2Scraper,
             "ethiopian": EthiopianScraper,
             "et": EthiopianScraper,
             "qatar": QatarScraper,
@@ -107,7 +109,7 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             else:
                 await status_msg.edit_text(
                     f"⚠️ Unknown airline: {airline_filter}\n"
-                    "Supported: emirates, ethiopian, qatar"
+                    "Supported: emirates, emiratesv2, ethiopian, qatar"
                 )
                 return
         else:
