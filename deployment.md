@@ -107,3 +107,16 @@ sudo docker restart flight-bot
     sudo swapon /swapfile
     echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
     ```
+
+## Debugging
+
+If the bot fails or returns no results, you can check the screenshots captured inside the container:
+
+```bash
+# Copy screenshots from container to current directory
+sudo docker cp flight-bot:/app/ethiopian_no_results.png .
+sudo docker cp flight-bot:/app/ethiopian_error.png .
+sudo docker cp flight-bot:/app/ethiopian_source.html .
+```
+
+Then download these files to your local machine to inspect what the bot sees.
