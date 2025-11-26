@@ -52,7 +52,7 @@ class EmiratesScraper(AirlineScraper):
 
             try:
                 # Navigate and fill form
-                url = "https://www.emirates.com/ng/english/book/"
+                url = "https://www.emirates.com/english/book/"
                 logger.info(f"Opening Emirates booking page: {url}")
                 sb.open(url)
                 sb.sleep(10)  # Increased from 6s
