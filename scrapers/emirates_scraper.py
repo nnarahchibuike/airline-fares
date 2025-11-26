@@ -32,7 +32,23 @@ class EmiratesScraper(AirlineScraper):
         """
         results = []
         
-        with SB(uc=True, test=False, locale="en", ad_block=True, xvfb=True, chromium_arg="--disable-dev-shm-usage") as sb:
+        # Proxy configuration
+        proxy_auth = os.getenv("PROXY_URL")
+        
+        sb_args = {
+            "uc": True,
+            "test": False,
+            "locale": "en",
+            "ad_block": True,
+            "xvfb": True,
+            "chromium_arg": "--disable-dev-shm-usage"
+        }
+        
+        if proxy_auth:
+            sb_args["proxy"] = proxy_auth
+            logger.info("Using proxy for Emirates scraper")
+        
+        with SB(**sb_args) as sb:
             # Track screenshots for debugging
             progress_screenshots = []
             
@@ -52,7 +68,7 @@ class EmiratesScraper(AirlineScraper):
 
             try:
                 # Navigate and fill form
-                url = "https://www.emirates.com/english/book/"
+                url = "https://www.emirates.com/"
                 logger.info(f"Opening Emirates booking page: {url}")
                 take_screenshot("0_start")
                 sb.driver.set_page_load_timeout(60)
@@ -72,7 +88,10 @@ class EmiratesScraper(AirlineScraper):
                 sb.click(origin_selector)
                 sb.sleep(1)
                 sb.clear(origin_selector)
-                sb.type(origin_selector, request.origin)
+                # Type slowly
+                for char in request.origin:
+                    sb.type(origin_selector, char)
+                    sb.sleep(0.2)
                 sb.sleep(3)
                 
                 # Wait for and click the first option
@@ -100,7 +119,10 @@ class EmiratesScraper(AirlineScraper):
                 sb.sleep(1)
                 sb.click(arrival_selector)
                 sb.sleep(1)
-                sb.type(arrival_selector, request.destination)
+                # Type slowly
+                for char in request.destination:
+                    sb.type(arrival_selector, char)
+                    sb.sleep(0.2)
                 sb.sleep(3)
                 
                 # Wait for and click the first option
