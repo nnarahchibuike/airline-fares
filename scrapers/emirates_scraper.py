@@ -156,7 +156,11 @@ class EmiratesScraper(AirlineScraper):
                     logger.info(f"Debug files saved: {screenshot_path}, {html_path}")
                 except Exception as debug_error:
                     logger.error(f"Failed to save debug files: {debug_error}")
-                return results
+                    raise e
+                
+                # Raise ScraperError with artifacts
+                from core.exceptions import ScraperError
+                raise ScraperError(f"Calendar grid not found: {e}", screenshot_path, html_path)
             
             soup = BeautifulSoup(sb.get_page_source(), 'html.parser')
             
