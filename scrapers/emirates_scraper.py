@@ -54,6 +54,8 @@ class EmiratesScraper(AirlineScraper):
                 # Navigate and fill form
                 url = "https://www.emirates.com/english/book/"
                 logger.info(f"Opening Emirates booking page: {url}")
+                take_screenshot("0_start")
+                sb.set_page_load_timeout(60)
                 sb.open(url)
                 sb.sleep(10)  # Increased from 6s
                 take_screenshot("1_loaded_page")
@@ -178,7 +180,7 @@ class EmiratesScraper(AirlineScraper):
                     
                     # Raise ScraperError with artifacts
                     from core.exceptions import ScraperError
-                    raise ScraperError(f"Search button not found: {e}", screenshot_path, html_path)
+                    raise ScraperError(f"Search button not found: {e}", screenshot_path, html_path, progress_screenshots)
                     
                 except Exception as debug_error:
                     logger.error(f"Failed to save debug files: {debug_error}")
@@ -210,7 +212,7 @@ class EmiratesScraper(AirlineScraper):
                 
                 # Raise ScraperError with artifacts
                 from core.exceptions import ScraperError
-                raise ScraperError(f"Calendar grid not found: {e}", screenshot_path, html_path)
+                raise ScraperError(f"Calendar grid not found: {e}", screenshot_path, html_path, progress_screenshots)
             
             soup = BeautifulSoup(sb.get_page_source(), 'html.parser')
             
