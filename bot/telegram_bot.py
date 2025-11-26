@@ -120,7 +120,10 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
         # Run search
         import asyncio
-        results_by_airline = await asyncio.to_thread(orchestrator.scan_all, request)
+        loop = asyncio.get_running_loop()
+        # asyncio.to_thread is only available in Python 3.9+
+        # Using run_in_executor for Python 3.8 compatibility (Ubuntu 20.04 default)
+        results_by_airline = await loop.run_in_executor(None, orchestrator.scan_all, request)
 
         if not results_by_airline:
             await status_msg.edit_text("❌ No flights found for this route and dates.")
