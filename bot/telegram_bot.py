@@ -123,9 +123,9 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         loop = asyncio.get_running_loop()
         # asyncio.to_thread is only available in Python 3.9+
         # Using run_in_executor for Python 3.8 compatibility (Ubuntu 20.04 default)
-        results_by_airline = await loop.run_in_executor(None, orchestrator.scan_all, request)
+        results_by_airline, errors = await loop.run_in_executor(None, orchestrator.scan_all, request)
 
-        if not results_by_airline:
+        if not results_by_airline and not errors:
             await status_msg.edit_text("❌ No flights found for this route and dates.")
             return
 
@@ -144,8 +144,25 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 response += f"{i}. {flight.departure_date} - {flight.return_date}: <b>{flight.price_display}</b>{medal}{best_tag}\n"
             
             response += "\n"
-
+            
+        # Report errors
+        if errors:
+            response += "\n⚠️ <b>Errors encountered:</b>\n"
+            for error in errors:
+                response += f"❌ {error['airline']}: {error['message']}\n"
+                
         await status_msg.edit_text(response, parse_mode="HTML")
+        
+        # Send screenshots for errors
+        for error in errors:
+            if error.get('screenshot_path') and os.path.exists(error['screenshot_path']):
+                try:
+                    await update.message.reply_photo(
+                        photo=open(error['screenshot_path'], 'rb'),
+                        caption=f"📸 Debug screenshot for {error['airline']}"
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to send screenshot: {e}")
 
     except Exception as e:
         logger.error(f"Search failed: {e}")

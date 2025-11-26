@@ -9,6 +9,8 @@ from core.models import FlightRequest, FlightResult
 logger = logging.getLogger(__name__)
 
 
+from core.exceptions import ScraperError
+
 class FlightOrchestrator:
     """Manages concurrent execution of multiple airline scrapers."""
     
@@ -26,7 +28,7 @@ class FlightOrchestrator:
         self.scrapers.append(scraper)
         logger.info(f"Registered scraper: {scraper.name}")
     
-    def scan_all(self, request: FlightRequest) -> Dict[str, List[FlightResult]]:
+    def scan_all(self, request: FlightRequest) -> tuple[Dict[str, List[FlightResult]], List[Dict]]:
         """
         Run all registered scrapers concurrently using multiprocessing.
         
@@ -34,12 +36,14 @@ class FlightOrchestrator:
             request: FlightRequest with search parameters
             
         Returns:
-            Dictionary mapping airline name to list of FlightResult objects.
-            Each list contains the exact date match (if found) and top 9 cheapest.
+            Tuple containing:
+            - Dictionary mapping airline name to list of FlightResult objects.
+            - List of error dictionaries with keys: airline, message, screenshot_path
         """
         logger.info(f"Scanning {len(self.scrapers)} airlines in parallel...")
         
         results_by_airline = {}
+        errors = []
         
         # Run scrapers in separate processes
         with concurrent.futures.ProcessPoolExecutor() as executor:
@@ -101,7 +105,19 @@ class FlightOrchestrator:
                     
                     results_by_airline[scraper.name] = final_list
                     
+                except ScraperError as se:
+                    logger.error(f"Scraper {scraper.name} failed with artifacts: {se}")
+                    errors.append({
+                        "airline": scraper.name,
+                        "message": str(se),
+                        "screenshot_path": se.screenshot_path
+                    })
                 except Exception as e:
                     logger.error(f"Scraper {scraper.name} failed: {e}")
+                    errors.append({
+                        "airline": scraper.name,
+                        "message": str(e),
+                        "screenshot_path": None
+                    })
         
-        return results_by_airline
+        return results_by_airline, errors

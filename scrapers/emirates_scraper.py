@@ -100,8 +100,41 @@ class EmiratesScraper(AirlineScraper):
             sb.sleep(3)
             
             # Search
-            sb.click('button.rsw-submit-button')
-            sb.sleep(20)  # Increased from 10s
+            try:
+                # Try multiple selectors for the search button
+                if sb.is_element_visible('button.rsw-submit-button'):
+                    sb.click('button.rsw-submit-button')
+                elif sb.is_element_visible('button[type="submit"]'):
+                    sb.click('button[type="submit"]')
+                elif sb.is_element_visible('button:contains("Search flights")'):
+                    sb.click('button:contains("Search flights")')
+                else:
+                    raise Exception("Search button not found")
+                    
+                sb.sleep(20)  # Increased from 10s
+            except Exception as e:
+                logger.error(f"Failed to click search button: {e}")
+                # Debug: Save screenshot and HTML on failure
+                try:
+                    screenshot_dir = "/app/downloaded_files"
+                    os.makedirs(screenshot_dir, exist_ok=True)
+                    screenshot_path = f"{screenshot_dir}/emirates_search_btn_fail_{request.origin}_{request.destination}.png"
+                    html_path = f"{screenshot_dir}/emirates_search_btn_fail_{request.origin}_{request.destination}.html"
+                    
+                    sb.save_screenshot(screenshot_path)
+                    with open(html_path, 'w', encoding='utf-8') as f:
+                        f.write(sb.get_page_source())
+                    logger.info(f"Debug files saved: {screenshot_path}, {html_path}")
+                    
+                    # Raise ScraperError with artifacts
+                    from core.exceptions import ScraperError
+                    raise ScraperError(f"Search button not found: {e}", screenshot_path, html_path)
+                    
+                except Exception as debug_error:
+                    logger.error(f"Failed to save debug files: {debug_error}")
+                    # If we can't save debug files, just re-raise the original error or a generic one
+                    raise e
+                return results
             
             # Extract results
             try:
