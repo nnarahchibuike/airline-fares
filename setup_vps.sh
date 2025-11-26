@@ -54,15 +54,13 @@ fi
 
 # 4. Python Environment Setup
 echo "Setting up Python environment..."
-# Install Python 3.12 via deadsnakes PPA (needed for Ubuntu 20.04)
-echo "Adding deadsnakes PPA..."
-add-apt-repository ppa:deadsnakes/ppa -y
-apt-get update
-apt-get install -y python3.12 python3.12-venv python3.12-dev
+
+# Use system Python (works for Ubuntu 20.04+ which has Python 3.8+)
+# We don't need to force Python 3.12 as the code is compatible with 3.8+
 
 if [ ! -d "venv" ]; then
-    echo "Creating virtual environment with Python 3.12..."
-    python3.12 -m venv venv
+    echo "Creating virtual environment..."
+    python3 -m venv venv
     echo "Virtual environment created."
 fi
 
