@@ -35,69 +35,96 @@ class EmiratesScraper(AirlineScraper):
         with SB(uc=True, test=False, locale="en", ad_block=True, xvfb=True, chromium_arg="--disable-dev-shm-usage") as sb:
             # Force desktop layout to prevent mobile view issues
             sb.set_window_size(1920, 1080)
-            # Navigate and fill form
-            url = "https://www.emirates.com/ng/english/book/"
-            logger.info(f"Opening Emirates booking page: {url}")
-            sb.open(url)
-            sb.sleep(10)  # Increased from 6s
-            
-            # Handle cookies
-            sb.click_if_visible("button#onetrust-accept-btn-handler")
-            sb.click_if_visible('button:contains("Accept")')
-            sb.click_if_visible('button[aria-label*="Accept"]')
-            sb.sleep(3)
-            
-            # Set origin
-            sb.click('input[id^="auto-suggest_"]:first-of-type')
-            sb.sleep(2)
-            sb.type('input[id^="auto-suggest_"]:first-of-type', request.origin)
-            sb.sleep(3)
-            sb.click('li[role="option"]:first-child')
-            sb.sleep(2)
-            
-            # Set destination
-            arrival_id = sb.execute_script(
-                "return document.querySelectorAll(\"input[id^='auto-suggest_']\")[1].id"
-            )
-            sb.sleep(2)
-            sb.click(f"#{arrival_id}")
-            sb.sleep(2)
-            sb.type(f"#{arrival_id}", request.destination + "\n")
-            sb.sleep(3)
-            
-            # Enable flexible dates
-            sb.click('button.custom-switch__toggle')
-            sb.sleep(2)
-            
-            # Set dates (using React value setter hack)
-            dep_date_str = request.departure_date.strftime("%d %b %y")
-            ret_date_str = request.return_date.strftime("%d %b %y")
-            
-            # Set departure date
-            sb.click('#startDate')
-            sb.sleep(3)
-            sb.execute_script(f"""
-                var input = document.querySelector('#startDate');
-                var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
-                nativeInputValueSetter.call(input, '{dep_date_str}');
-                input.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                input.dispatchEvent(new Event('change', {{ bubbles: true }}));
-                input.dispatchEvent(new Event('blur', {{ bubbles: true }}));
-            """)
-            sb.sleep(2)
-            
-            # Set return date
-            sb.click('#endDate')
-            sb.sleep(3)
-            sb.execute_script(f"""
-                var input = document.querySelector('#endDate');
-                var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
-                nativeInputValueSetter.call(input, '{ret_date_str}');
-                input.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                input.dispatchEvent(new Event('change', {{ bubbles: true }}));
-                input.dispatchEvent(new Event('blur', {{ bubbles: true }}));
-            """)
-            sb.sleep(3)
+            try:
+                # Navigate and fill form
+                url = "https://www.emirates.com/ng/english/book/"
+                logger.info(f"Opening Emirates booking page: {url}")
+                sb.open(url)
+                sb.sleep(10)  # Increased from 6s
+                
+                # Handle cookies
+                sb.click_if_visible("button#onetrust-accept-btn-handler")
+                sb.click_if_visible('button:contains("Accept")')
+                sb.click_if_visible('button[aria-label*="Accept"]')
+                sb.sleep(3)
+                
+                # Set origin
+                sb.click('input[id^="auto-suggest_"]:first-of-type')
+                sb.sleep(2)
+                sb.type('input[id^="auto-suggest_"]:first-of-type', request.origin)
+                sb.sleep(3)
+                sb.click('li[role="option"]:first-child')
+                sb.sleep(2)
+                
+                # Set destination
+                arrival_id = sb.execute_script(
+                    "return document.querySelectorAll(\"input[id^='auto-suggest_']\")[1].id"
+                )
+                sb.sleep(2)
+                sb.click(f"#{arrival_id}")
+                sb.sleep(2)
+                sb.type(f"#{arrival_id}", request.destination + "\n")
+                sb.sleep(3)
+                
+                # Enable flexible dates
+                # Try multiple selectors for the toggle
+                if sb.is_element_visible('button.custom-switch__toggle'):
+                    sb.click('button.custom-switch__toggle')
+                elif sb.is_element_visible('.custom-switch__toggle'):
+                    sb.click('.custom-switch__toggle')
+                else:
+                    logger.warning("Flexible dates toggle not found, proceeding without it")
+                sb.sleep(2)
+                
+                # Set dates (using React value setter hack)
+                dep_date_str = request.departure_date.strftime("%d %b %y")
+                ret_date_str = request.return_date.strftime("%d %b %y")
+                
+                # Set departure date
+                sb.click('#startDate')
+                sb.sleep(3)
+                sb.execute_script(f"""
+                    var input = document.querySelector('#startDate');
+                    var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+                    nativeInputValueSetter.call(input, '{dep_date_str}');
+                    input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                    input.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                    input.dispatchEvent(new Event('blur', {{ bubbles: true }}));
+                """)
+                sb.sleep(2)
+                
+                # Set return date
+                sb.click('#endDate')
+                sb.sleep(3)
+                sb.execute_script(f"""
+                    var input = document.querySelector('#endDate');
+                    var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+                    nativeInputValueSetter.call(input, '{ret_date_str}');
+                    input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                    input.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                    input.dispatchEvent(new Event('blur', {{ bubbles: true }}));
+                """)
+                sb.sleep(3)
+            except Exception as e:
+                logger.error(f"Failed during form filling: {e}")
+                # Debug: Save screenshot and HTML on failure
+                try:
+                    screenshot_dir = "/app/downloaded_files"
+                    os.makedirs(screenshot_dir, exist_ok=True)
+                    screenshot_path = f"{screenshot_dir}/emirates_form_fail_{request.origin}_{request.destination}.png"
+                    html_path = f"{screenshot_dir}/emirates_form_fail_{request.origin}_{request.destination}.html"
+                    
+                    sb.save_screenshot(screenshot_path)
+                    with open(html_path, 'w', encoding='utf-8') as f:
+                        f.write(sb.get_page_source())
+                    logger.info(f"Debug files saved: {screenshot_path}, {html_path}")
+                    
+                    # Raise ScraperError with artifacts
+                    from core.exceptions import ScraperError
+                    raise ScraperError(f"Form filling failed: {e}", screenshot_path, html_path)
+                except Exception as debug_error:
+                    logger.error(f"Failed to save debug files: {debug_error}")
+                    raise e
             
             # Search
             try:
