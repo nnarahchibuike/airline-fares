@@ -1,10 +1,15 @@
 """Emirates V2 scraper using deep link approach."""
 from typing import List
+import logging
+import os
 from seleniumbase import SB
 from bs4 import BeautifulSoup
 
 from scrapers.base_scraper import AirlineScraper
 from core.models import FlightRequest, FlightResult
+
+# Set up logger
+logger = logging.getLogger(__name__)
 
 
 class EmiratesV2Scraper(AirlineScraper):
@@ -57,8 +62,9 @@ class EmiratesV2Scraper(AirlineScraper):
                 f"&selacity1={request.destination}"
             )
             
+            logger.info(f"Opening Emirates URL: {url}")
             sb.open(url)
-            sb.sleep(2)  # Minimal wait
+            sb.sleep(5)  # Increased wait for Docker
             
             # Handle cookie consent if present
             try:
@@ -69,9 +75,24 @@ class EmiratesV2Scraper(AirlineScraper):
             
             # Wait for price element to load
             try:
-                sb.wait_for_element('span.currency-cash__amount', timeout=8)
-            except:
-                # If element doesn't appear in time, return empty results
+                logger.info("Waiting for price element: span.currency-cash__amount")
+                sb.wait_for_element('span.currency-cash__amount', timeout=20)
+                logger.info("Price element found successfully")
+            except Exception as e:
+                # Debug: Save screenshot and HTML on failure
+                logger.error(f"Failed to find price element: {e}")
+                try:
+                    screenshot_dir = "/app/downloaded_files"
+                    os.makedirs(screenshot_dir, exist_ok=True)
+                    screenshot_path = f"{screenshot_dir}/emirates_debug_{request.origin}_{request.destination}.png"
+                    html_path = f"{screenshot_dir}/emirates_debug_{request.origin}_{request.destination}.html"
+                    
+                    sb.save_screenshot(screenshot_path)
+                    with open(html_path, 'w', encoding='utf-8') as f:
+                        f.write(sb.get_page_source())
+                    logger.info(f"Debug files saved: {screenshot_path}, {html_path}")
+                except Exception as debug_error:
+                    logger.error(f"Failed to save debug files: {debug_error}")
                 return results
             
             # Parse the page

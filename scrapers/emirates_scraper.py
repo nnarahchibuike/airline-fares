@@ -1,11 +1,16 @@
 """Emirates airline scraper."""
 from typing import List
 from datetime import date
+import logging
+import os
 from seleniumbase import SB
 from bs4 import BeautifulSoup
 
 from scrapers.base_scraper import AirlineScraper
 from core.models import FlightRequest, FlightResult
+
+# Set up logger
+logger = logging.getLogger(__name__)
 
 
 class EmiratesScraper(AirlineScraper):
@@ -32,6 +37,7 @@ class EmiratesScraper(AirlineScraper):
             sb.set_window_size(1920, 1080)
             # Navigate and fill form
             url = "https://www.emirates.com/ng/english/book/"
+            logger.info(f"Opening Emirates booking page: {url}")
             sb.open(url)
             sb.sleep(10)  # Increased from 6s
             
@@ -98,7 +104,27 @@ class EmiratesScraper(AirlineScraper):
             sb.sleep(20)  # Increased from 10s
             
             # Extract results
-            sb.wait_for_element('.calendar-grid', timeout=30)
+            try:
+                logger.info("Waiting for calendar grid element...")
+                sb.wait_for_element('.calendar-grid', timeout=60)  # Increased timeout for Docker
+                logger.info("Calendar grid found successfully")
+            except Exception as e:
+                logger.error(f"Failed to find calendar grid: {e}")
+                # Debug: Save screenshot and HTML on failure
+                try:
+                    screenshot_dir = "/app/downloaded_files"
+                    os.makedirs(screenshot_dir, exist_ok=True)
+                    screenshot_path = f"{screenshot_dir}/emirates_calendar_debug_{request.origin}_{request.destination}.png"
+                    html_path = f"{screenshot_dir}/emirates_calendar_debug_{request.origin}_{request.destination}.html"
+                    
+                    sb.save_screenshot(screenshot_path)
+                    with open(html_path, 'w', encoding='utf-8') as f:
+                        f.write(sb.get_page_source())
+                    logger.info(f"Debug files saved: {screenshot_path}, {html_path}")
+                except Exception as debug_error:
+                    logger.error(f"Failed to save debug files: {debug_error}")
+                return results
+            
             soup = BeautifulSoup(sb.get_page_source(), 'html.parser')
             
             # Extract origin and destination
