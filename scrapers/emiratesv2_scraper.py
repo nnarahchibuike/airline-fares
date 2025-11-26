@@ -37,7 +37,20 @@ class EmiratesV2Scraper(AirlineScraper):
         # Using regular mode (not uc=True) for much faster startup
         # Headless mode also speeds things up
         # xvfb=True handles virtual display in Docker
-        with SB(test=False, headless=True, ad_block=True, xvfb=True) as sb:
+        # Proxy configuration
+        proxy_auth = os.getenv("PROXY_URL")
+        
+        sb_args = {
+            "test": False,
+            "headless": True,
+            "ad_block": True,
+            "xvfb": True
+        }
+        
+        if proxy_auth:
+            sb_args["proxy"] = proxy_auth
+        
+        with SB(**sb_args) as sb:
             # Force desktop layout to prevent mobile view issues
             sb.set_window_size(1920, 1080)
             # Build deep link URL
