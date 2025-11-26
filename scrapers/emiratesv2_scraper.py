@@ -31,7 +31,10 @@ class EmiratesV2Scraper(AirlineScraper):
         
         # Using regular mode (not uc=True) for much faster startup
         # Headless mode also speeds things up
-        with SB(test=False, headless=True, ad_block=True) as sb:
+        # xvfb=True handles virtual display in Docker
+        with SB(test=False, headless=True, ad_block=True, xvfb=True) as sb:
+            # Force desktop layout to prevent mobile view issues
+            sb.set_window_size(1920, 1080)
             # Build deep link URL
             # Format dates as DD-Mon-YY (e.g., 21-Dec-25)
             dep_date = request.departure_date.strftime("%d-%b-%y")

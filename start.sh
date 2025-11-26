@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Generate machine-id to prevent Chrome/DBus errors
+dbus-uuidgen > /etc/machine-id
+
 # Set timezone to Lagos for correct currency/locale detection
 export TZ=Africa/Lagos
 

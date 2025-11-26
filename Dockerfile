@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     unzip \
     xvfb \
+    dbus \
     libxi6 \
     libnss3 \
     libxss1 \
