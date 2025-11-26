@@ -1,7 +1,7 @@
 """Orchestrator for running multiple scrapers concurrently."""
 import asyncio
 import concurrent.futures
-from typing import List, Dict
+from typing import List, Dict, Tuple
 import logging
 from scrapers.base_scraper import AirlineScraper
 from core.models import FlightRequest, FlightResult
@@ -28,7 +28,7 @@ class FlightOrchestrator:
         self.scrapers.append(scraper)
         logger.info(f"Registered scraper: {scraper.name}")
     
-    def scan_all(self, request: FlightRequest) -> tuple[Dict[str, List[FlightResult]], List[Dict]]:
+    def scan_all(self, request: FlightRequest) -> Tuple[Dict[str, List[FlightResult]], List[Dict]]:
         """
         Run all registered scrapers concurrently using multiprocessing.
         
