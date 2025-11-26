@@ -4,15 +4,26 @@ This guide details how to deploy your airline scraper directly onto a VPS (Virtu
 
 ## Prerequisites
 
-- A VPS running **Ubuntu 22.04 LTS** or **24.04 LTS**.
+- A VPS running **Ubuntu 20.04 LTS**, **22.04 LTS**, or **24.04 LTS**.
 - Root access or a user with `sudo` privileges.
 
 ## Step 1: System Update & Dependencies
 
-First, update your package list and install the necessary system libraries. These are required for Python, Google Chrome, and SeleniumBase.
+The provided `setup_vps.sh` script handles all of this for you, including installing **Python 3.12** (which is required, as Ubuntu 20.04 comes with older versions).
+
+If you prefer to run commands manually, ensure you add the deadsnakes PPA for Python 3.12:
 
 ```bash
 sudo apt-get update
+sudo apt-get install -y software-properties-common
+sudo add-apt-repository ppa:deadsnakes/ppa -y
+sudo apt-get update
+```
+
+Then install system libraries:
+
+```bash
+sudo apt-get install -y \
 sudo apt-get install -y \
     wget \
     gnupg \
@@ -27,8 +38,8 @@ sudo apt-get install -y \
     libgtk-3-0 \
     default-jdk \
     python3-tk \
-    python3-dev \
-    python3-venv \
+    python3.12-dev \
+    python3.12-venv \
     python3-pip \
     locales \
     tzdata \
@@ -82,7 +93,7 @@ sudo apt-get install -y google-chrome-stable
     It's best practice to use a virtual environment to avoid conflicting with system Python packages.
 
     ```bash
-    python3 -m venv venv
+    python3.12 -m venv venv
     source venv/bin/activate
     ```
 

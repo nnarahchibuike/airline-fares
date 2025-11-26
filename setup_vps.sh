@@ -30,7 +30,8 @@ apt-get install -y \
     locales \
     tzdata \
     git \
-    tmux
+    tmux \
+    software-properties-common
 
 # 2. Configure Timezone & Locale
 echo "Configuring Timezone and Locale..."
@@ -53,8 +54,15 @@ fi
 
 # 4. Python Environment Setup
 echo "Setting up Python environment..."
+# Install Python 3.12 via deadsnakes PPA (needed for Ubuntu 20.04)
+echo "Adding deadsnakes PPA..."
+add-apt-repository ppa:deadsnakes/ppa -y
+apt-get update
+apt-get install -y python3.12 python3.12-venv python3.12-dev
+
 if [ ! -d "venv" ]; then
-    python3 -m venv venv
+    echo "Creating virtual environment with Python 3.12..."
+    python3.12 -m venv venv
     echo "Virtual environment created."
 fi
 
