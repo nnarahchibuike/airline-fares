@@ -33,20 +33,37 @@ class EmiratesScraper(AirlineScraper):
         results = []
         
         with SB(uc=True, test=False, locale="en", ad_block=True, xvfb=True, chromium_arg="--disable-dev-shm-usage") as sb:
-            # Force desktop layout to prevent mobile view issues
-            sb.set_window_size(1920, 1080)
+            # Track screenshots for debugging
+            progress_screenshots = []
+            
+            def take_screenshot(step_name):
+                try:
+                    screenshot_dir = "/app/downloaded_files"
+                    os.makedirs(screenshot_dir, exist_ok=True)
+                    timestamp = int(os.path.getmtime(screenshot_dir) if os.path.exists(screenshot_dir) else 0)
+                    # Use a counter or timestamp to ensure order
+                    count = len(progress_screenshots) + 1
+                    screenshot_path = f"{screenshot_dir}/emirates_step_{count}_{step_name}_{request.origin}_{request.destination}.png"
+                    sb.save_screenshot(screenshot_path)
+                    progress_screenshots.append(screenshot_path)
+                    logger.info(f"Saved debug screenshot: {screenshot_path}")
+                except Exception as e:
+                    logger.error(f"Failed to take screenshot for {step_name}: {e}")
+
             try:
                 # Navigate and fill form
                 url = "https://www.emirates.com/ng/english/book/"
                 logger.info(f"Opening Emirates booking page: {url}")
                 sb.open(url)
                 sb.sleep(10)  # Increased from 6s
+                take_screenshot("1_loaded_page")
                 
                 # Handle cookies
                 sb.click_if_visible("button#onetrust-accept-btn-handler")
                 sb.click_if_visible('button:contains("Accept")')
                 sb.click_if_visible('button[aria-label*="Accept"]')
                 sb.sleep(3)
+                take_screenshot("2_cookies_handled")
                 
                 # Set origin
                 sb.click('input[id^="auto-suggest_"]:first-of-type')
@@ -55,6 +72,7 @@ class EmiratesScraper(AirlineScraper):
                 sb.sleep(3)
                 sb.click('li[role="option"]:first-child')
                 sb.sleep(2)
+                take_screenshot("3_origin_set")
                 
                 # Set destination
                 arrival_id = sb.execute_script(
@@ -65,6 +83,7 @@ class EmiratesScraper(AirlineScraper):
                 sb.sleep(2)
                 sb.type(f"#{arrival_id}", request.destination + "\n")
                 sb.sleep(3)
+                take_screenshot("4_destination_set")
                 
                 # Enable flexible dates
                 # Try multiple selectors for the toggle
@@ -105,6 +124,7 @@ class EmiratesScraper(AirlineScraper):
                     input.dispatchEvent(new Event('blur', {{ bubbles: true }}));
                 """)
                 sb.sleep(3)
+                take_screenshot("5_dates_set")
             except Exception as e:
                 logger.error(f"Failed during form filling: {e}")
                 # Debug: Save screenshot and HTML on failure
@@ -121,7 +141,10 @@ class EmiratesScraper(AirlineScraper):
                     
                     # Raise ScraperError with artifacts
                     from core.exceptions import ScraperError
-                    raise ScraperError(f"Form filling failed: {e}", screenshot_path, html_path)
+                    raise ScraperError(f"Form filling failed: {e}", screenshot_path, html_path, progress_screenshots)
+                except Exception as debug_error:
+                    logger.error(f"Failed to save debug files: {debug_error}")
+                    raise e
                 except Exception as debug_error:
                     logger.error(f"Failed to save debug files: {debug_error}")
                     raise e

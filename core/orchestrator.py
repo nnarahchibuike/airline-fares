@@ -110,7 +110,8 @@ class FlightOrchestrator:
                     errors.append({
                         "airline": scraper.name,
                         "message": str(se),
-                        "screenshot_path": se.screenshot_path
+                        "screenshot_path": se.screenshot_path,
+                        "screenshot_paths": se.screenshot_paths
                     })
                 except Exception as e:
                     logger.error(f"Scraper {scraper.name} failed: {e}")

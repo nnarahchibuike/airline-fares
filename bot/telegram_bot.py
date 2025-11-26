@@ -155,7 +155,23 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         
         # Send screenshots for errors
         for error in errors:
-            if error.get('screenshot_path') and os.path.exists(error['screenshot_path']):
+            # Send all progress screenshots if available
+            if error.get('screenshot_paths'):
+                for path in error['screenshot_paths']:
+                    if os.path.exists(path):
+                        try:
+                            # Extract step name from filename for caption
+                            filename = os.path.basename(path)
+                            caption = f"📸 {error['airline']} Step: {filename}"
+                            await update.message.reply_photo(
+                                photo=open(path, 'rb'),
+                                caption=caption
+                            )
+                        except Exception as e:
+                            logger.error(f"Failed to send screenshot {path}: {e}")
+            
+            # Fallback to single screenshot path if no list or list empty
+            elif error.get('screenshot_path') and os.path.exists(error['screenshot_path']):
                 try:
                     await update.message.reply_photo(
                         photo=open(error['screenshot_path'], 'rb'),
