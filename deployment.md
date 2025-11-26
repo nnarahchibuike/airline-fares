@@ -64,9 +64,9 @@ Build the Docker image:
 sudo docker build -t flight-bot .
 ```
 
-Run the container in the background (detached mode):
+Run the container in the background (detached mode) with increased shared memory:
 ```bash
-sudo docker run -d --name flight-bot --env-file .env flight-bot
+sudo docker run -d --name flight-bot --shm-size=2g --env-file .env flight-bot
 ```
 
 > **Note:** The Dockerfile now uses `start.sh` to configure the Timezone (default: Africa/Lagos) and Xvfb. This ensures correct currency detection (NGN) and browser stability.
