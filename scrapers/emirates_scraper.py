@@ -68,11 +68,27 @@ class EmiratesScraper(AirlineScraper):
                 take_screenshot("2_cookies_handled")
                 
                 # Set origin
-                sb.click('input[id^="auto-suggest_"]:first-of-type')
-                sb.sleep(2)
-                sb.type('input[id^="auto-suggest_"]:first-of-type', request.origin)
+                origin_selector = 'input[id^="auto-suggest_"]:first-of-type'
+                sb.click(origin_selector)
+                sb.sleep(1)
+                sb.clear(origin_selector)
+                sb.type(origin_selector, request.origin)
                 sb.sleep(3)
-                sb.click('li[role="option"]:first-child')
+                
+                # Wait for and click the first option
+                if sb.is_element_visible('li[role="option"]'):
+                    sb.click('li[role="option"]:first-child')
+                else:
+                    logger.warning("Origin dropdown not found, trying to force value")
+                    # Fallback: Try to force value with JS if dropdown doesn't appear
+                    sb.execute_script(f"""
+                        var input = document.querySelector('{origin_selector}');
+                        var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+                        nativeInputValueSetter.call(input, '{request.origin}');
+                        input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                        input.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                        input.dispatchEvent(new Event('blur', {{ bubbles: true }}));
+                    """)
                 sb.sleep(2)
                 take_screenshot("3_origin_set")
                 
@@ -80,11 +96,28 @@ class EmiratesScraper(AirlineScraper):
                 arrival_id = sb.execute_script(
                     "return document.querySelectorAll(\"input[id^='auto-suggest_']\")[1].id"
                 )
-                sb.sleep(2)
-                sb.click(f"#{arrival_id}")
-                sb.sleep(2)
-                sb.type(f"#{arrival_id}", request.destination + "\n")
+                arrival_selector = f"#{arrival_id}"
+                sb.sleep(1)
+                sb.click(arrival_selector)
+                sb.sleep(1)
+                sb.type(arrival_selector, request.destination)
                 sb.sleep(3)
+                
+                # Wait for and click the first option
+                if sb.is_element_visible('li[role="option"]'):
+                    sb.click('li[role="option"]:first-child')
+                else:
+                    logger.warning("Destination dropdown not found, trying to force value")
+                    # Fallback: Try to force value with JS
+                    sb.execute_script(f"""
+                        var input = document.querySelector('{arrival_selector}');
+                        var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+                        nativeInputValueSetter.call(input, '{request.destination}');
+                        input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                        input.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                        input.dispatchEvent(new Event('blur', {{ bubbles: true }}));
+                    """)
+                sb.sleep(2)
                 take_screenshot("4_destination_set")
                 
                 # Enable flexible dates
