@@ -55,7 +55,7 @@ class EmiratesScraper(AirlineScraper):
                 url = "https://www.emirates.com/english/book/"
                 logger.info(f"Opening Emirates booking page: {url}")
                 take_screenshot("0_start")
-                sb.set_page_load_timeout(60)
+                sb.driver.set_page_load_timeout(60)
                 sb.open(url)
                 sb.sleep(10)  # Increased from 6s
                 take_screenshot("1_loaded_page")
