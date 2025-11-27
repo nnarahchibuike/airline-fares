@@ -4,19 +4,27 @@ import concurrent.futures
 from typing import List, Dict, Tuple
 import logging
 from scrapers.base_scraper import AirlineScraper
+from scrapers.emirates_scraper import EmiratesScraper
+from scrapers.emiratesv2_scraper import EmiratesV2Scraper
+from scrapers.emirates_v3_scraper import EmiratesV3Scraper
+from scrapers.ethiopian_scraper import EthiopianScraper
 from core.models import FlightRequest, FlightResult
+from core.exceptions import ScraperError
 
 logger = logging.getLogger(__name__)
 
-
-from core.exceptions import ScraperError
 
 class FlightOrchestrator:
     """Manages concurrent execution of multiple airline scrapers."""
     
     def __init__(self):
-        """Initialize orchestrator with empty scraper list."""
-        self.scrapers: List[AirlineScraper] = []
+        """Initialize orchestrator with a list of default scrapers."""
+        self.scrapers = [
+            EmiratesScraper(),
+            EmiratesV2Scraper(),
+            EmiratesV3Scraper(),
+            EthiopianScraper()
+        ]
     
     def register_scraper(self, scraper: AirlineScraper):
         """
