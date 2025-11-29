@@ -58,8 +58,6 @@ class EthiopianScraper(AirlineScraper):
                     f"&searchType=BRANDED"
                     f"&class=Economy"
                     f"&ADT={request.adults}"
-                    f"&CHD=0"
-                    f"&INF=0"
                     f"&origin={request.origin}"
                     f"&destination={request.destination}"
                     f"&date={request.departure_date.strftime('%m-%d-%Y')}"
