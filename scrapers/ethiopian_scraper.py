@@ -80,30 +80,46 @@ class EthiopianScraper(AirlineScraper):
                 take_screenshot("2_cookies_handled")
                 
                 # Wait for results
-                # Wait for results
+                # Wait for results with retry logic
                 logger.info("Waiting for matrix grid...")
+                matrix_found = False
+                
+                # First attempt: 40 seconds
                 try:
-                    sb.wait_for_element('.dxp-matrix-grid-layout', timeout=60)
+                    sb.wait_for_element('.dxp-matrix-grid-layout', timeout=40)
+                    matrix_found = True
+                except Exception:
+                    logger.warning("Matrix not found after 40s. Reloading page...")
+                    take_screenshot("3_retry_reload")
+                    sb.refresh()
+                    sb.sleep(10) # Wait for reload
+                    
+                    # Second attempt: 60 seconds
+                    try:
+                        sb.wait_for_element('.dxp-matrix-grid-layout', timeout=60)
+                        matrix_found = True
+                    except Exception as e:
+                        logger.error(f"Timeout waiting for matrix after retry: {e}")
+                        
+                        # Debug artifacts
+                        screenshot_dir = "/app/downloaded_files"
+                        os.makedirs(screenshot_dir, exist_ok=True)
+                        screenshot_path = f"{screenshot_dir}/ethiopian_timeout_{request.origin}_{request.destination}.png"
+                        html_path = f"{screenshot_dir}/ethiopian_timeout_{request.origin}_{request.destination}.html"
+                        
+                        sb.save_screenshot(screenshot_path)
+                        with open(html_path, 'w', encoding='utf-8') as f:
+                            f.write(sb.get_page_source())
+                            
+                        raise ScraperError(f"Timeout waiting for matrix: {e}", screenshot_path, html_path, progress_screenshots)
+                
+                if matrix_found:
                     sb.sleep(30)  # Wait for full page load
                     take_screenshot("3_matrix_loaded")
                     
                     # Check for specific error state
                     if "Flight not found" in sb.get_page_source():
                         raise ScraperError("Ethiopian Airlines returned 'Flight not found' error.", None, None, progress_screenshots)
-                except Exception as e:
-                    logger.error(f"Timeout waiting for matrix: {e}")
-                    
-                    # Debug artifacts
-                    screenshot_dir = "/app/downloaded_files"
-                    os.makedirs(screenshot_dir, exist_ok=True)
-                    screenshot_path = f"{screenshot_dir}/ethiopian_timeout_{request.origin}_{request.destination}.png"
-                    html_path = f"{screenshot_dir}/ethiopian_timeout_{request.origin}_{request.destination}.html"
-                    
-                    sb.save_screenshot(screenshot_path)
-                    with open(html_path, 'w', encoding='utf-8') as f:
-                        f.write(sb.get_page_source())
-                        
-                    raise ScraperError(f"Timeout waiting for matrix: {e}", screenshot_path, html_path, progress_screenshots)
                 
                 # Parse results
                 soup = BeautifulSoup(sb.get_page_source(), 'html.parser')
