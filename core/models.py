@@ -1,7 +1,7 @@
 """Data models for flight scraping system."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
-from typing import Optional
+from typing import Optional, List
 
 
 @dataclass
@@ -35,6 +35,7 @@ class FlightResult:
     currency: str         # e.g., "NGN", "USD"
     price_display: str    # e.g., "NGN 2,592,377"
     is_lowest: bool = False
+    screenshot_paths: List[str] = field(default_factory=list)
     
     def __str__(self):
         """String representation for display."""

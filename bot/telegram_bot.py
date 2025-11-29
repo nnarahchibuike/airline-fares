@@ -145,6 +145,22 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             
             response += "\n"
             
+            # Check for success screenshots (e.g. for Ethiopian debugging)
+            if flights:
+                first_result = flights[0]
+                if hasattr(first_result, 'screenshot_paths') and first_result.screenshot_paths:
+                    for path in first_result.screenshot_paths:
+                        if os.path.exists(path):
+                            try:
+                                filename = os.path.basename(path)
+                                caption = f"📸 {airline} Debug: {filename}"
+                                await update.message.reply_photo(
+                                    photo=open(path, 'rb'),
+                                    caption=caption
+                                )
+                            except Exception as e:
+                                logger.error(f"Failed to send success screenshot {path}: {e}")
+            
         # Report errors
         if errors:
             response += "\n⚠️ <b>Errors encountered:</b>\n"

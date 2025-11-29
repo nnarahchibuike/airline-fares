@@ -1,4 +1,4 @@
 seleniumbase
 beautifulsoup4
-python-telegram-bot
+python-telegram-bot[socks]
 python-dotenv

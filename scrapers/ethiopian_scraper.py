@@ -3,9 +3,11 @@ from typing import List
 from seleniumbase import SB
 from bs4 import BeautifulSoup
 
+import os
 import logging
 from scrapers.base_scraper import AirlineScraper
 from core.models import FlightRequest, FlightResult
+from core.exceptions import ScraperError
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +31,24 @@ class EthiopianScraper(AirlineScraper):
         results = []
         
         with SB(uc=True, test=False, locale="en", ad_block=False, chromium_arg="--disable-dev-shm-usage") as sb:
+            # Track screenshots for debugging
+            progress_screenshots = []
+            
+            def take_screenshot(step_name):
+                try:
+                    screenshot_dir = "/app/downloaded_files"
+                    os.makedirs(screenshot_dir, exist_ok=True)
+                    # Use a counter to ensure order
+                    count = len(progress_screenshots) + 1
+                    screenshot_path = f"{screenshot_dir}/ethiopian_step_{count}_{step_name}_{request.origin}_{request.destination}.png"
+                    sb.save_screenshot(screenshot_path)
+                    progress_screenshots.append(screenshot_path)
+                    logger.info(f"Saved debug screenshot: {screenshot_path}")
+                except Exception as e:
+                    logger.error(f"Failed to take screenshot for {step_name}: {e}")
+
             try:
+                take_screenshot("0_start")
                 # Build deep link URL
                 url = (
                     f"https://dxbooking.ethiopianairlines.com/dx/ETDX/#/matrix"
@@ -54,22 +73,36 @@ class EthiopianScraper(AirlineScraper):
                 logger.info(f"Opening URL: {url}")
                 sb.open(url)
                 sb.sleep(10)
+                take_screenshot("1_loaded_page")
                 
                 # Handle cookies
                 sb.click_if_visible("button#onetrust-accept-btn-handler")
                 sb.click_if_visible('button:contains("Accept")')
                 sb.click_if_visible('button[aria-label*="Accept"]')
                 sb.sleep(3)
+                take_screenshot("2_cookies_handled")
                 
+                # Wait for results
                 # Wait for results
                 logger.info("Waiting for matrix grid...")
                 try:
                     sb.wait_for_element('.dxp-matrix-grid-layout', timeout=60)
                     sb.sleep(15)  # Wait for full page load
+                    take_screenshot("3_matrix_loaded")
                 except Exception as e:
                     logger.error(f"Timeout waiting for matrix: {e}")
-                    sb.save_screenshot("ethiopian_timeout.png")
-                    raise
+                    
+                    # Debug artifacts
+                    screenshot_dir = "/app/downloaded_files"
+                    os.makedirs(screenshot_dir, exist_ok=True)
+                    screenshot_path = f"{screenshot_dir}/ethiopian_timeout_{request.origin}_{request.destination}.png"
+                    html_path = f"{screenshot_dir}/ethiopian_timeout_{request.origin}_{request.destination}.html"
+                    
+                    sb.save_screenshot(screenshot_path)
+                    with open(html_path, 'w', encoding='utf-8') as f:
+                        f.write(sb.get_page_source())
+                        
+                    raise ScraperError(f"Timeout waiting for matrix: {e}", screenshot_path, html_path, progress_screenshots)
                 
                 # Parse results
                 soup = BeautifulSoup(sb.get_page_source(), 'html.parser')
@@ -130,19 +163,33 @@ class EthiopianScraper(AirlineScraper):
                                 price=price_numeric,
                                 currency=currency,
                                 price_display=f"{currency} {amount_text}",
-                                is_lowest=is_lowest
+                                is_lowest=is_lowest,
+                                screenshot_paths=progress_screenshots
                             )
                             results.append(result)
             
+            except ScraperError:
+                raise
             except Exception as e:
                 logger.error(f"Error during Ethiopian scrape: {e}")
-                sb.save_screenshot("ethiopian_error.png")
+                
+                # Debug artifacts
+                screenshot_dir = "/app/downloaded_files"
+                os.makedirs(screenshot_dir, exist_ok=True)
+                screenshot_path = f"{screenshot_dir}/ethiopian_error_{request.origin}_{request.destination}.png"
+                html_path = f"{screenshot_dir}/ethiopian_error_{request.origin}_{request.destination}.html"
+                
+                try:
+                    sb.save_screenshot(screenshot_path)
+                    with open(html_path, 'w', encoding='utf-8') as f:
+                        f.write(sb.get_page_source())
+                except:
+                    pass
+                    
+                raise ScraperError(f"Ethiopian scrape failed: {e}", screenshot_path, html_path, progress_screenshots)
             
             if not results:
                 logger.warning("No results found. Saving screenshot.")
-                sb.save_screenshot("ethiopian_no_results.png")
-                # Save page source for debugging
-                with open("ethiopian_source.html", "w") as f:
-                    f.write(sb.get_page_source())
+                take_screenshot("4_no_results")
         
         return results
