@@ -68,12 +68,16 @@ class EmiratesScraper(AirlineScraper):
 
             try:
                 # Navigate and fill form
-                url = "https://www.emirates.com/"
+                url = "https://www.emirates.com/english/book/"
                 logger.info(f"Opening Emirates booking page: {url}")
                 take_screenshot("0_start")
                 sb.driver.set_page_load_timeout(60)
                 sb.open(url)
-                sb.sleep(10)  # Increased from 6s
+                try:
+                    sb.wait_for_ready_state_complete(timeout=60)
+                except Exception:
+                    logger.warning("Page load timeout, proceeding anyway...")
+                sb.sleep(10)  # Extra wait after load
                 take_screenshot("1_loaded_page")
                 
                 # Handle cookies
@@ -90,7 +94,7 @@ class EmiratesScraper(AirlineScraper):
                 sb.clear(origin_selector)
                 # Type slowly
                 for char in request.origin:
-                    sb.type(origin_selector, char)
+                    sb.add_text(origin_selector, char)
                     sb.sleep(0.2)
                 sb.sleep(3)
                 
@@ -121,7 +125,7 @@ class EmiratesScraper(AirlineScraper):
                 sb.sleep(1)
                 # Type slowly
                 for char in request.destination:
-                    sb.type(arrival_selector, char)
+                    sb.add_text(arrival_selector, char)
                     sb.sleep(0.2)
                 sb.sleep(3)
                 
@@ -157,8 +161,12 @@ class EmiratesScraper(AirlineScraper):
                 ret_date_str = request.return_date.strftime("%d %b %y")
                 
                 # Set departure date
-                sb.click('#startDate')
-                sb.sleep(3)
+                try:
+                    sb.cdp.click('#startDate')
+                    sb.sleep(1)
+                except Exception as e:
+                    logger.warning(f"CDP click failed for startDate: {e}")
+                sb.sleep(2)
                 sb.execute_script(f"""
                     var input = document.querySelector('#startDate');
                     var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
@@ -170,8 +178,12 @@ class EmiratesScraper(AirlineScraper):
                 sb.sleep(2)
                 
                 # Set return date
-                sb.click('#endDate')
-                sb.sleep(3)
+                try:
+                    sb.cdp.click('#endDate')
+                    sb.sleep(1)
+                except Exception as e:
+                    logger.warning(f"CDP click failed for endDate: {e}")
+                sb.sleep(2)
                 sb.execute_script(f"""
                     var input = document.querySelector('#endDate');
                     var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
@@ -218,7 +230,7 @@ class EmiratesScraper(AirlineScraper):
                 else:
                     raise Exception("Search button not found")
                     
-                sb.sleep(20)  # Increased from 10s
+                sb.sleep(5)  # Short wait for any animations
             except Exception as e:
                 logger.error(f"Failed to click search button: {e}")
                 # Debug: Save screenshot and HTML on failure
@@ -246,8 +258,10 @@ class EmiratesScraper(AirlineScraper):
             # Extract results
             try:
                 logger.info("Waiting for calendar grid element...")
-                sb.wait_for_element('.calendar-grid', timeout=60)  # Increased timeout for Docker
-                logger.info("Calendar grid found successfully")
+                sb.wait_for_element('.calendar-grid', timeout=60)
+                logger.info("Calendar grid found. Waiting for prices to load...")
+                sb.wait_for_element('.line-cash--amount', timeout=30)
+                logger.info("Prices loaded successfully")
             except Exception as e:
                 logger.error(f"Failed to find calendar grid: {e}")
                 # Debug: Save screenshot and HTML on failure

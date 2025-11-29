@@ -11,7 +11,6 @@ from core.models import FlightRequest, FlightResult
 from core.orchestrator import FlightOrchestrator
 from scrapers.emirates_scraper import EmiratesScraper
 from scrapers.emiratesv2_scraper import EmiratesV2Scraper
-from scrapers.emirates_v3_scraper import EmiratesV3Scraper
 from scrapers.ethiopian_scraper import EthiopianScraper
 from scrapers.qatar_scraper import QatarScraper
 
@@ -40,7 +39,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     await update.message.reply_text(
         "To search for flights, use the /search command:\n"
         "/search ORIGIN DESTINATION DEPART_DATE RETURN_DATE [AIRLINE]\n\n"
-        "Optional [AIRLINE]: emirates, emiratesv2, emiratesv3, ethiopian, qatar\n\n"
+        "Optional [AIRLINE]: emirates, emiratesv2, ethiopian, qatar\n\n"
         "Example:\n"
         "/search LOS CAN 2025-12-03 2025-12-23 qatar"
     )
@@ -98,7 +97,6 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             "emirates": EmiratesScraper,
             "ek": EmiratesScraper,
             "emiratesv2": EmiratesV2Scraper,
-            "emiratesv3": EmiratesV3Scraper,
             "ethiopian": EthiopianScraper,
             "et": EthiopianScraper,
             "qatar": QatarScraper,
@@ -111,7 +109,7 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             else:
                 await status_msg.edit_text(
                     f"⚠️ Unknown airline: {airline_filter}\n"
-                    "Supported: emirates, emiratesv2, emiratesv3, ethiopian, qatar"
+                    "Supported: emirates, emiratesv2, ethiopian, qatar"
                 )
                 return
         else:
@@ -195,7 +193,26 @@ def main() -> None:
         return
 
     # Create the Application
-    application = Application.builder().token(token).build()
+    builder = Application.builder().token(token)
+    
+    # Configure proxy if available
+    proxy_url = os.environ.get("PROXY_URL")
+    if proxy_url:
+        print(f"Using proxy: {proxy_url}")
+        builder.proxy(proxy_url)
+        builder.get_updates_proxy(proxy_url)
+
+    # Increase timeouts and pool size for slow proxies
+    builder.connection_pool_size(8)
+    builder.connect_timeout(60.0)
+    builder.read_timeout(60.0)
+    builder.write_timeout(60.0)
+    builder.get_updates_connection_pool_size(8)
+    builder.get_updates_connect_timeout(60.0)
+    builder.get_updates_read_timeout(60.0)
+    builder.get_updates_write_timeout(60.0)
+
+    application = builder.build()
 
     # Add handlers
     application.add_handler(CommandHandler("start", start))
