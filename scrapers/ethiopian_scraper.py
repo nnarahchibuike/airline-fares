@@ -58,7 +58,6 @@ class EthiopianScraper(AirlineScraper):
                     f"&searchType=BRANDED"
                     f"&class=Economy"
                     f"&ADT={request.adults}"
-                    f"&C13=0"
                     f"&CHD=0"
                     f"&INF=0"
                     f"&origin={request.origin}"
@@ -89,6 +88,10 @@ class EthiopianScraper(AirlineScraper):
                     sb.wait_for_element('.dxp-matrix-grid-layout', timeout=60)
                     sb.sleep(30)  # Wait for full page load
                     take_screenshot("3_matrix_loaded")
+                    
+                    # Check for specific error state
+                    if "Flight not found" in sb.get_page_source():
+                        raise ScraperError("Ethiopian Airlines returned 'Flight not found' error.", None, None, progress_screenshots)
                 except Exception as e:
                     logger.error(f"Timeout waiting for matrix: {e}")
                     
