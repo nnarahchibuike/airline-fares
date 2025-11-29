@@ -87,7 +87,7 @@ class EthiopianScraper(AirlineScraper):
                 logger.info("Waiting for matrix grid...")
                 try:
                     sb.wait_for_element('.dxp-matrix-grid-layout', timeout=60)
-                    sb.sleep(15)  # Wait for full page load
+                    sb.sleep(30)  # Wait for full page load
                     take_screenshot("3_matrix_loaded")
                 except Exception as e:
                     logger.error(f"Timeout waiting for matrix: {e}")
