@@ -53,13 +53,19 @@ class EthiopianScraper(AirlineScraper):
                 url = (
                     f"https://dxbooking.ethiopianairlines.com/dx/ETDX/#/matrix"
                     f"?journeyType=round-trip"
+                    f"&locale=en-GB"
                     f"&class=Economy"
                     f"&origin={request.origin}"
                     f"&destination={request.destination}"
                     f"&date={request.departure_date.strftime('%m-%d-%Y')}"
+                    f"&ADT={request.adults}"
+                    f"&CHD=0"
+                    f"&INF=0"
+                    f"&awardBooking=false"
                     f"&origin1={request.destination}"
                     f"&destination1={request.origin}"
                     f"&date1={request.return_date.strftime('%m-%d-%Y')}"
+                    f"&execution=8b2849ab-212a-4bab-92d2-97c86298c426"
                 )
                 
                 logger.info(f"Opening URL: {url}")
