@@ -194,8 +194,8 @@ class EthiopianV2ScraperPrototype(AirlineScraper):
                         logger.info("Reloading page as requested...")
                         sb.refresh()
                         
-                        logger.info("Waiting 30 seconds for page to fully load...")
-                        sb.sleep(30)
+                        logger.info("Waiting 3 minutes for page to fully load...")
+                        sb.sleep(180)
                         
                         take_screenshot("6_matrix_reloaded")
                     
