@@ -40,7 +40,13 @@ class EthiopianV2ScraperPrototype(AirlineScraper):
             "locale": "en",
             "ad_block": False, # Sometimes adblock breaks site functionality
             "xvfb": True,
-            "chromium_arg": "--disable-dev-shm-usage"
+            "chromium_arg": [
+                "--disable-dev-shm-usage",
+                "--no-sandbox",
+                "--disable-gpu",
+                "--disable-webrtc",
+                "--disable-blink-features=AutomationControlled"
+            ]
         }
         
         if proxy_auth:
